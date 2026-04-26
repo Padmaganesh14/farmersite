@@ -1,41 +1,56 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const asyncHandler = require('express-async-handler');
 
-const protect = async (req, res, next) => {
+// ✅ Protect middleware
+const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  // ✅ Check if authorization header exists FIRST
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    // Extract token from header
-    token = req.headers.authorization.split(' ')[1];
+    try {
+      // Get token from header
+      token = req.headers.authorization.split(' ')[1];
+      
+      console.log(`🔍 Received token: ${token ? token.substring(0, 10) + '...' : 'NONE'}`);
+
+      if (token === 'null' || token === 'undefined' || !token) {
+        console.error('❌ Token is null or undefined string');
+        res.status(401);
+        throw new Error('Not authorized, invalid token format');
+      }
+
+      // Verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // Get user from the token
+      req.user = await User.findById(decoded.id).select('-password');
+
+      if (!req.user) {
+        res.status(401);
+        throw new Error('Not authorized, user not found');
+      }
+
+      next();
+    } catch (error) {
+      console.error('❌ Token verification failed:', error.message);
+      res.status(401);
+      throw new Error('Not authorized, token failed');
+    }
   }
 
-  // ✅ If no token found, throw error immediately
   if (!token) {
     res.status(401);
-    throw new Error('Not authorized, no token provided');
+    throw new Error('Not authorized, no token');
   }
+});
 
-  // ✅ Try to verify token
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select('-password');
-    console.log(`✅ User authenticated: ${req.user.email}`);
-    next();
-  } catch (error) {
-    console.error('❌ Token verification failed:', error.message);
-    res.status(401);
-    throw new Error('Not authorized - Invalid token');
-  }
-};
-
-// Grant access to specific roles
+// ✅ Authorize roles
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    if (!req.user || !roles.includes(req.user.role)) {
       res.status(403);
       throw new Error(`User role ${req.user.role} is not authorized to access this route`);
     }

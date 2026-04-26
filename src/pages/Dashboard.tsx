@@ -1,6 +1,5 @@
- 
 import { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom'; // ✅ FIXED
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Trash2 } from 'lucide-react';
@@ -12,10 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate(); // ✅ now works
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // ✅ Always initialize as array
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -30,42 +29,102 @@ const Dashboard = () => {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  if (!user) return <Navigate to="/login" />;
+  // ✅ safer redirect
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const isFarmer = user.role === 'farmer';
 
-  // ✅ FETCH DATA (FIXED)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // FETCH ORDERS
-        const orderRes = await fetch('http://localhost:5000/api/orders/my', {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
+  // ✅ FETCH DATA
+  const fetchData = async () => {
+    if (!user?.token) return;
 
-        if (orderRes.ok) {
-          const data = await orderRes.json();
-          console.log("ORDERS API:", data);
+    try {
+      // ORDERS
+      const orderRes = await fetch('http://localhost:5000/api/orders/my', {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
 
-          // ✅ HANDLE ANY RESPONSE SHAPE
-          setOrders(Array.isArray(data) ? data : data.orders || []);
-        }
-
-        // FETCH PRODUCTS (ONLY FARMER)
-        if (isFarmer) {
-          const prodRes = await fetch('http://localhost:5000/api/products');
-          if (prodRes.ok) {
-            const data = await prodRes.json();
-            setProducts(Array.isArray(data) ? data : data.products || []);
-          }
-        }
-      } catch (err) {
-        console.error(err);
+      if (orderRes.ok) {
+        const data = await orderRes.json();
+        setOrders(data.data || data.orders || (Array.isArray(data) ? data : []));
       }
-    };
 
+      // PRODUCTS
+      if (isFarmer) {
+        const prodRes = await fetch('http://localhost:5000/api/products');
+        if (prodRes.ok) {
+          const data = await prodRes.json();
+          setProducts(data.products || (Array.isArray(data) ? data : []));
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, [user]);
+
+  // ✅ UPDATE ORDER
+  const handleUpdateStatus = async (orderId: string, status: string) => {
+    try {
+      const endpoint =
+        status === 'accepted'
+          ? `http://localhost:5000/api/orders/${orderId}/accept`
+          : `http://localhost:5000/api/orders/${orderId}/status`;
+
+      const method = status === 'accepted' ? 'POST' : 'PUT';
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: method === 'PUT' ? JSON.stringify({ status }) : undefined,
+      });
+
+      if (res.ok) {
+        toast({ title: `Order ${status} successfully` });
+        fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Failed to update order', variant: 'destructive' });
+    }
+  };
+
+  // ✅ START DELIVERY
+  const handleStartDelivery = async (orderId: string) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/tracking/start/${orderId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({
+          driverName: 'Local Driver',
+          driverPhone: '9876543210',
+          vehicleType: 'truck',
+        }),
+      });
+
+      if (res.ok) {
+        toast({ title: 'Delivery started and tracking is live!' });
+        fetchData();
+        navigate(`/live-tracker/${orderId}`); // ✅ now works
+      }
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Failed to start delivery', variant: 'destructive' });
+    }
+  };
 
   // ✅ ADD PRODUCT
   const handleAddProduct = async (e: React.FormEvent) => {
@@ -142,46 +201,21 @@ const Dashboard = () => {
 
             {showAddForm && (
               <form onSubmit={handleAddProduct} className="mt-4 space-y-3">
-                <Input
-                  placeholder="Crop Name"
-                  value={newProduct.cropName}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, cropName: e.target.value })
-                  }
+                <Input placeholder="Crop Name" value={newProduct.cropName}
+                  onChange={(e) => setNewProduct({ ...newProduct, cropName: e.target.value })}
                 />
-
-                <Input
-                  placeholder="Price"
-                  type="number"
-                  value={newProduct.price}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, price: e.target.value })
-                  }
+                <Input placeholder="Price" type="number" value={newProduct.price}
+                  onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
                 />
-
-                <Input
-                  placeholder="Quantity"
-                  value={newProduct.quantity}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, quantity: e.target.value })
-                  }
+                <Input placeholder="Quantity" value={newProduct.quantity}
+                  onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
                 />
-
-                <Input
-                  placeholder="Location"
-                  value={newProduct.location}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, location: e.target.value })
-                  }
+                <Input placeholder="Location" value={newProduct.location}
+                  onChange={(e) => setNewProduct({ ...newProduct, location: e.target.value })}
                 />
-
-                <Input
-                  type="file"
-                  onChange={(e) =>
-                    setImageFile(e.target.files ? e.target.files[0] : null)
-                  }
+                <Input type="file"
+                  onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
                 />
-
                 <Button type="submit">Save</Button>
               </form>
             )}
@@ -199,7 +233,6 @@ const Dashboard = () => {
                   <h3 className="font-semibold">{p.cropName}</h3>
                   <p>₹{p.price}</p>
                 </div>
-
                 <Button onClick={() => handleDeleteProduct(p._id)}>
                   <Trash2 />
                 </Button>
@@ -210,15 +243,37 @@ const Dashboard = () => {
 
         {/* ORDERS */}
         <div className="mt-6">
-          <h2 className="text-xl font-semibold">Orders</h2>
+          <h2 className="text-xl font-semibold mb-4">Orders Received</h2>
 
           {orders.length === 0 ? (
             <p>No orders yet</p>
           ) : (
             orders.map((o) => (
-              <div key={o._id} className="border p-4 mb-3 rounded shadow-sm">
-                <p className="font-medium">Product: {o.productId}</p>
-                <p className="text-sm text-gray-500">Status: {o.status}</p>
+              <div key={o._id} className="border p-4 mb-3 rounded flex justify-between">
+                <div>
+                  <h3>{o.product?.cropName}</h3>
+                  <p>Status: {o.status}</p>
+                </div>
+
+                <div className="flex gap-2">
+                  {o.status === 'pending' && (
+                    <Button onClick={() => handleUpdateStatus(o._id, 'accepted')}>
+                      Accept
+                    </Button>
+                  )}
+
+                  {o.status === 'accepted' && (
+                    <Button onClick={() => handleStartDelivery(o._id)}>
+                      Start Delivery
+                    </Button>
+                  )}
+
+                  {(o.status === 'shipped' || o.status === 'out_for_delivery') && (
+                    <Button onClick={() => navigate(`/live-tracker/${o._id}`)}>
+                      Track
+                    </Button>
+                  )}
+                </div>
               </div>
             ))
           )}
@@ -231,4 +286,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
- 

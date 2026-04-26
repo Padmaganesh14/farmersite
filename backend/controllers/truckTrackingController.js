@@ -59,20 +59,20 @@ const startDeliveryTracking = asyncHandler(async (req, res) => {
     };
 
     order.trackingStartedAt = new Date();
-    order.status = 'shipped';
+    order.status = 'out_for_delivery';
 
-    // Initialize location history with farmer location
-    if (order.farmerLocation) {
-      order.locationHistory = [
-        {
-          lat: order.farmerLocation.lat,
-          lng: order.farmerLocation.lng,
-          timestamp: new Date(),
-          speedKmh: 0,
-        },
-      ];
-      order.vehicleLocation = order.farmerLocation;
-    }
+    // Initialize location history with farmer location or default
+    const initialLocation = order.farmerLocation?.lat ? order.farmerLocation : { lat: 13.0827, lng: 80.2707 };
+    
+    order.locationHistory = [
+      {
+        lat: initialLocation.lat,
+        lng: initialLocation.lng,
+        timestamp: new Date(),
+        speedKmh: 0,
+      },
+    ];
+    order.vehicleLocation = initialLocation;
 
     const savedOrder = await order.save();
 

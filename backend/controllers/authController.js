@@ -48,11 +48,21 @@ const registerUser = asyncHandler(async (req, res) => {
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  console.log(`🔐 Login attempt for: ${email}`);
 
   // Check for user email
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: email.toLowerCase().trim() });
 
-  if (user && (await user.matchPassword(password))) {
+  if (!user) {
+    console.error(`❌ User not found: ${email}`);
+    res.status(401);
+    throw new Error('Invalid credentials');
+  }
+
+  const isMatch = await user.matchPassword(password);
+  console.log(`Match result: ${isMatch}`);
+
+  if (isMatch) {
     res.json({
       _id: user.id,
       name: user.name,

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DeliveryMap from "@/components/OrderMap";
 import {
   Truck,
   MapPin,
@@ -203,6 +204,13 @@ export default function FarmerDeliveriesDashboard() {
           </div>
         )}
 
+        {/* Deliveries Map */}
+        {!loading && deliveries.length > 0 && (
+          <div className="mb-8">
+            <DeliveryMap deliveries={deliveries} />
+          </div>
+        )}
+
         {/* Deliveries Grid */}
         {!loading && deliveries.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -299,7 +307,7 @@ export default function FarmerDeliveriesDashboard() {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => navigate(`/tracking/${delivery.orderId}`)}
+                    onClick={() => navigate(`/live-tracker/${delivery.orderId}`)}
                   >
                     <MapPin size={16} className="mr-1" />
                     View Map

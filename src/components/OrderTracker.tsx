@@ -90,7 +90,9 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      const token = savedUser ? JSON.parse(savedUser).token : null;
+      
       await axios.put(
         `http://localhost:5000/api/orders/${order._id}`,
         { status: nextStatus },
@@ -220,7 +222,7 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
         )}
 
         <Link
-          to={`/order-tracking/${order._id}`}
+          to={`/live-tracker/${order._id}`}
           className="inline-flex items-center justify-center gap-2 rounded-lg border border-blue-600 px-4 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 transition"
         >
           <Navigation className="h-4 w-4" />
@@ -233,117 +235,4 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
 
 export default OrderTracker;
 
-  const currentIdx = STATUS_INDEX[order.status];
-  const nextStatus = getNextStatus(order.status);
 
-  return (
-    <div className="card-shadow animate-fade-in rounded-xl border border-border bg-card p-4">
-
-      {/* ── Top row: product + actions ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <img
-            src={order.productImage}
-            alt={order.productName}
-            className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
-          />
-          <div>
-            <h4 className="font-heading font-semibold text-foreground">{order.productName}</h4>
-            <p className="text-xs text-muted-foreground">
-              {order.id} · {order.quantity}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Status badge */}
-          <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${STATUS_COLORS[order.status]}`}>
-            {STEPS[currentIdx].label.toUpperCase()}
-          </span>
-
-          {/* Live Tracking button */}
-          {order.status !== 'pending' && order.status !== 'delivered' && (
-            <Link
-              to={`/order-tracking/${order.id}`}
-              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Live Tracking
-            </Link>
-          )}
-
-          {/* Quick map toggle */}
-          <button
-            onClick={() => setShowMap((v) => !v)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-              showMap ? 'bg-primary text-primary-foreground' : 'bg-accent text-accent-foreground hover:bg-primary/10'
-            }`}
-          >
-            <MapPin className="h-3.5 w-3.5" />
-            {t('order.trackOrder')}
-          </button>
-
-          <div className="text-right">
-            <p className="font-heading text-lg font-bold text-primary">₹{order.total}</p>
-            <p className="text-xs text-muted-foreground">{order.date}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Progress stepper ── */}
-      <div className="relative mt-5">
-        {/* connector */}
-        <div className="absolute left-4 right-4 top-4 h-0.5 bg-border">
-          <div
-            className="h-full bg-primary transition-all duration-700"
-            style={{ width: `${(currentIdx / (STEPS.length - 1)) * 100}%` }}
-          />
-        </div>
-
-        <div className="flex items-start justify-between">
-          {STEPS.map((step, i) => {
-            const done = i <= currentIdx;
-            const Icon = STEP_ICONS[i];
-            return (
-              <div key={step.key} className="z-10 flex flex-col items-center gap-1">
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                    done
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-muted text-muted-foreground'
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-                <span className={`text-center text-[10px] font-semibold leading-tight max-w-[55px] ${
-                  done ? 'text-primary' : 'text-muted-foreground'
-                }`}>
-                  {step.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Inline map ── */}
-      {showMap && (
-        <div className="mt-4 animate-slide-up">
-          <OrderMap order={order} />
-        </div>
-      )}
-
-      {/* ── Farmer update button ── */}
-      {showUpdateButton && nextStatus && (
-        <button
-          onClick={() => onUpdateStatus?.(order.id, nextStatus)}
-          className="mt-4 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
-        >
-          {t('order.updateStatus')}: {STEPS[STATUS_INDEX[nextStatus]].label}
-        </button>
-      )}
-    </div>
-  );
-};
-
-export default OrderTracker;

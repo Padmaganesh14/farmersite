@@ -55,6 +55,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
   const order = await Order.create({
     buyer: req.user._id,
     product: productId,
+     farmer: product.farmer._id,
     quantity,
     totalPrice,
     buyerLocation: buyerLocation || {
@@ -90,10 +91,7 @@ exports.getMyOrders = asyncHandler(async (req, res) => {
 
   if (req.user.role === 'farmer') {
     // Farmer sees orders for their products
-    const products = await Product.find({ farmer: req.user._id }, '_id');
-    const productIds = products.map((p) => p._id);
-
-    orders = await Order.find({ product: { $in: productIds } })
+    orders = await Order.find({ farmer: req.user._id })
       .populate('buyer', 'name email phone')
       .populate('product', 'cropName price farmer image')
       .populate('product.farmer', 'name email phone')
@@ -594,9 +592,7 @@ exports.getOrderStats = asyncHandler(async (req, res) => {
   let query = {};
 
   if (role === 'farmer') {
-    const products = await Product.find({ farmer: userId }, '_id');
-    const productIds = products.map((p) => p._id);
-    query = { product: { $in: productIds } };
+    query = { farmer: userId };
   } else {
     query = { buyer: userId };
   }

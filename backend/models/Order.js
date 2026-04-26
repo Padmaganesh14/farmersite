@@ -16,6 +16,13 @@ const orderSchema = mongoose.Schema(
       ref: 'Product',
     },
 
+    // Reference to farmer
+    farmer: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: [true, 'Please add farmer ID'],
+      ref: 'User',
+    },
+
     // Quantity ordered
     quantity: {
       type: Number,
