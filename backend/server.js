@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -20,7 +20,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
-app.use('/api/tracking', require('./routes/trackingRoutes'));  // ✅ Truck tracking routes
+app.use('/api/tracking', require('./routes/trackingRoutes'));  // âœ… Truck tracking routes
 
 // Default Route
 app.get('/', (req, res) => {

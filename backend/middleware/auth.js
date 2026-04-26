@@ -11,15 +11,11 @@ const protect = asyncHandler(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     try {
-      // Get token from header
       token = req.headers.authorization.split(' ')[1];
-      
-      console.log(`🔍 Received token: ${token ? token.substring(0, 10) + '...' : 'NONE'}`);
 
-      if (token === 'null' || token === 'undefined' || !token) {
-        console.error('❌ Token is null or undefined string');
+      if (!token || token === 'null' || token === 'undefined') {
         res.status(401);
-        throw new Error('Not authorized, invalid token format');
+        throw new Error('Not authorized, token is missing or invalid string');
       }
 
       // Verify token
@@ -30,20 +26,19 @@ const protect = asyncHandler(async (req, res, next) => {
 
       if (!req.user) {
         res.status(401);
-        throw new Error('Not authorized, user not found');
+        throw new Error('Not authorized, user no longer exists');
       }
 
       next();
     } catch (error) {
-      console.error('❌ Token verification failed:', error.message);
+      console.error('❌ AUTH ERROR:', error.message);
       res.status(401);
-      throw new Error('Not authorized, token failed');
+      // Give the frontend the exact reason
+      throw new Error(error.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token');
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401);
-    throw new Error('Not authorized, no token');
+    throw new Error('Not authorized, no token provided');
   }
 });
 

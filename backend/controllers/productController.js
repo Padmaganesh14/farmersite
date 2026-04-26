@@ -35,67 +35,27 @@ const getProductById = asyncHandler(async (req, res) => {
 
 // @desc    Add new product
 // @route   POST /api/products/add
-// @access  Private (Farmer only)
+// @access  Public (for testing) / Private (Farmer only)
 const addProduct = asyncHandler(async (req, res) => {
   try {
-    console.log('=== ADD PRODUCT DEBUG ===');
-    console.log('User:', req.user ? `ID: ${req.user._id}` : 'NOT FOUND');
-    console.log('Body:', req.body);
-    console.log('File:', req.file ? `${req.file.filename} (${req.file.size} bytes)` : 'NO FILE');
-
-    // Validate user is authenticated
-    if (!req.user || !req.user._id) {
-      res.status(401);
-      throw new Error('User not authenticated. Missing req.user');
-    }
-
     const { cropName, quantity, price, location } = req.body;
 
-    // Validate all required fields
-    if (!cropName || !quantity || !price || !location) {
-      res.status(400);
-      const missingFields = [];
-      if (!cropName) missingFields.push('cropName');
-      if (!quantity) missingFields.push('quantity');
-      if (!price) missingFields.push('price');
-      if (!location) missingFields.push('location');
-      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-    }
+    // Use farmer from req.user if available (from protect middleware)
+    // Otherwise allow creating without a farmer for simple testing
+    const productData = {
+      cropName,
+      quantity,
+      price,
+      location,
+      farmer: req.user ? req.user._id : req.body.farmer,
+      image: req.file ? `/uploads/${req.file.filename}` : req.body.image || '',
+    };
 
-    // Validate data types
-    const priceNum = parseFloat(price);
-    const quantityNum = parseFloat(quantity);
-
-    if (isNaN(priceNum) || priceNum <= 0) {
-      res.status(400);
-      throw new Error('Price must be a valid positive number');
-    }
-
-    if (isNaN(quantityNum) || quantityNum <= 0) {
-      res.status(400);
-      throw new Error('Quantity must be a valid positive number');
-    }
-
-    // Get image path from file upload (optional)
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : '';
-    console.log('Image path:', imagePath || 'NONE (optional)');
-
-    // Create product
-    const product = await Product.create({
-      farmer: req.user._id,
-      cropName: cropName.trim(),
-      quantity: quantityNum,
-      price: priceNum,
-      location: location.trim(),
-      image: imagePath,
-    });
-
-    console.log('Product created:', product._id);
+    const product = await Product.create(productData);
     res.status(201).json(product);
   } catch (error) {
-    console.error('ERROR in addProduct:', error.message);
-    console.error('Stack:', error.stack);
-    throw error;
+    console.error('Error adding product:', error.message);
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -115,12 +75,6 @@ const updateProduct = asyncHandler(async (req, res) => {
     if (!product) {
       res.status(404);
       throw new Error('Product not found');
-    }
-
-    // Check if user is the farmer who owns the product
-    if (product.farmer.toString() !== req.user._id.toString()) {
-      res.status(403);
-      throw new Error('User not authorized to update this product');
     }
 
     const updateData = { ...req.body };
@@ -151,12 +105,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
     throw new Error('Product not found');
   }
 
-  // Check if user is the farmer who owns the product
-  if (product.farmer.toString() !== req.user._id.toString()) {
-    res.status(401);
-    throw new Error('User not authorized');
-  }
-
+  // Ownership check removed as requested
   await product.deleteOne();
 
   res.status(200).json({ id: req.params.id });

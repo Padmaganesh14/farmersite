@@ -14,11 +14,8 @@ export default function ProductManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const myProducts = res.data.filter(
-        (p: any) => p.farmer?._id === user?.id
-      );
-
-      setProducts(myProducts);
+      // Restriction removed: Show all products to any logged-in farmer
+      setProducts(res.data);
     } catch (err) {
       console.error(err);
     }
@@ -29,6 +26,8 @@ export default function ProductManagement() {
   }, [token, user]);
 
   const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+
     try {
       await axios.delete(
         `http://localhost:5000/api/products/${id}`,
@@ -41,8 +40,8 @@ export default function ProductManagement() {
 
       setProducts((prev: any) => prev.filter((p: any) => p._id !== id));
     } catch (err: any) {
-      console.error(err.response?.data || err.message);
-      alert(err.response?.data?.message || "Delete failed");
+      console.error("Delete error:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "Delete failed: " + err.message);
     }
   };
 
@@ -58,7 +57,7 @@ export default function ProductManagement() {
         fontSize: "32px",
         fontWeight: "bold"
       }}>
-        My Products
+        {user?.role === 'admin' ? "Product Management (Admin)" : "Product Management"}
       </h1>
 
       <div style={{
@@ -114,3 +113,4 @@ export default function ProductManagement() {
       </div>
     </div>
   );
+}

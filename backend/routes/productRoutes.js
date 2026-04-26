@@ -21,6 +21,9 @@ router.get('/', getProducts);
 // Get single product by ID
 router.get('/:id', getProductById);
 
+// Protected add product - requires farmer login
+router.post('/add', protect, authorize('farmer'), upload.single('image'), addProduct);
+
 
 // ================= FARMER ROUTES =================
 
