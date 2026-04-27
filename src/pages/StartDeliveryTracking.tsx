@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { API_URL } from '@/config';
 
 export default function StartDeliveryTracking() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -55,13 +56,8 @@ export default function StartDeliveryTracking() {
     setError(null);
 
     try {
-      // Validate fields
-      if (!formData.driverName.trim()) {
-        throw new Error('Driver name is required');
-      }
-      if (!formData.driverPhone.trim()) {
-        throw new Error('Driver phone is required');
-      }
+      if (!formData.driverName.trim()) throw new Error('Driver name is required');
+      if (!formData.driverPhone.trim()) throw new Error('Driver phone is required');
       if (!/^\d{10}$/.test(formData.driverPhone.replace(/\D/g, ''))) {
         throw new Error('Phone number must be 10 digits');
       }
@@ -69,7 +65,7 @@ export default function StartDeliveryTracking() {
       console.log('📤 Starting delivery tracking...');
 
       const response = await axios.post(
-        `http://localhost:5000/api/tracking/start/${orderId}`,
+        `${API_URL}/api/tracking/start/${orderId}`,
         {
           driverName: formData.driverName.trim(),
           driverPhone: formData.driverPhone.trim(),
@@ -84,7 +80,6 @@ export default function StartDeliveryTracking() {
       console.log('✅ Tracking started:', response.data);
       setSuccess(true);
 
-      // Redirect to live tracking page
       setTimeout(() => {
         navigate(`/tracking/${orderId}`);
       }, 2000);
@@ -136,7 +131,6 @@ export default function StartDeliveryTracking() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Driver Name */}
               <div>
                 <Label htmlFor="driverName" className="text-base font-medium">
                   Driver Name
@@ -154,7 +148,6 @@ export default function StartDeliveryTracking() {
                 />
               </div>
 
-              {/* Driver Phone */}
               <div>
                 <Label htmlFor="driverPhone" className="text-base font-medium">
                   Driver Phone
@@ -174,7 +167,6 @@ export default function StartDeliveryTracking() {
               </div>
             </div>
 
-            {/* Vehicle Type */}
             <div>
               <Label htmlFor="vehicleType" className="text-base font-medium">
                 Vehicle Type
@@ -195,7 +187,6 @@ export default function StartDeliveryTracking() {
               </Select>
             </div>
 
-            {/* License Plate */}
             <div>
               <Label htmlFor="licensePlate" className="text-base font-medium">
                 License Plate <span className="text-muted-foreground">(Optional)</span>
@@ -212,7 +203,6 @@ export default function StartDeliveryTracking() {
               />
             </div>
 
-            {/* Info Box */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-900">
                 <MapPin className="inline mr-2" size={16} />
@@ -220,7 +210,6 @@ export default function StartDeliveryTracking() {
               </p>
             </div>
 
-            {/* Buttons */}
             <div className="flex gap-3 pt-4">
               <Button
                 type="button"
@@ -251,7 +240,6 @@ export default function StartDeliveryTracking() {
             </div>
           </form>
 
-          {/* Tips */}
           <div className="mt-8 pt-8 border-t">
             <p className="font-semibold text-sm mb-4">💡 Tips:</p>
             <ul className="text-sm text-muted-foreground space-y-2">

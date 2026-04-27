@@ -1,36 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
+import { API_URL } from '@/config';
 
 export default function ProductManagement() {
   const { user } = useAuth();
   const token = user?.token;
 
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/products', {
+      const res = await axios.get(`${API_URL}/api/products`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      // Restriction removed: Show all products to any logged-in farmer
-      setProducts(res.data);
+      setProducts(res.data.products || res.data);
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    if (token && user?.id) fetchProducts();
-  }, [token, user]);
+    if (token) fetchProducts();
+  }, [token]);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/products/${id}`,
+        `${API_URL}/api/products/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

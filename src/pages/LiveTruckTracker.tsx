@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { MapPin, Phone, Truck, Clock, Navigation } from "lucide-react";
 import LiveTrackerMap from "@/components/LiveTrackerMap";
+import { API_URL } from '@/config';
 
 interface Location {
   lat: number;
@@ -52,13 +53,12 @@ export default function LiveTruckTracker() {
   const textColor = darkMode ? "text-gray-100" : "text-gray-900";
   const secondaryText = darkMode ? "text-gray-400" : "text-gray-600";
 
-  // 🔄 OPTIONAL: fetch real order details
   useEffect(() => {
     if (!id) return;
 
     const fetchOrder = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/orders/${id}`);
+        const res = await fetch(`${API_URL}/api/orders/${id}`);
         const data = await res.json();
 
         if (data) {
@@ -113,11 +113,10 @@ export default function LiveTruckTracker() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* 🗺️ MAP SECTION (FIXED) */}
+          {/* 🗺️ MAP SECTION */}
           <div className="lg:col-span-2">
             <div className={`${cardColor} rounded-2xl shadow-lg p-4`}>
               
-              {/* ✅ REAL LEAFLET MAP */}
               <LiveTrackerMap orderId={order.id} />
 
               <div className="flex justify-between mt-3">

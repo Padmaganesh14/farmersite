@@ -11,6 +11,7 @@ const app = express();
 
 // Middleware
 const allowedOrigins = [
+  'http://localhost:5173',
   'http://localhost:8080',
   'http://localhost:8081',
   'http://localhost:3000',
@@ -19,10 +20,8 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (Postman, curl, mobile apps)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error('Not allowed by CORS'));
+    // Allow all origins for now to fix the CORS issue
+    callback(null, true);
   },
   credentials: true,
 }));

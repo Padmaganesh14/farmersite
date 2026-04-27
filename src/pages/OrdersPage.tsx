@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import OrderTracker from '@/components/OrderTracker';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { API_URL } from '@/config';
 
 interface Order {
   _id: string;
@@ -26,10 +27,12 @@ export default function OrdersPage() {
   const [filter, setFilter] = useState<'all' | Order['status']>('all');
 
   const isFarmer = user?.role === 'farmer';
-  const token = user?.token;  // ✅ Get token from user object
+  const token = user?.token;
 
   useEffect(() => {
-    fetchOrders();
+    if (token) {
+      fetchOrders();
+    }
   }, [token]);
 
   const fetchOrders = async () => {
@@ -37,12 +40,12 @@ export default function OrdersPage() {
       setLoading(true);
       setError(null);
 
-      const response = await axios.get('http://localhost:5000/api/orders/my', {
+      const response = await axios.get(`${API_URL}/api/orders/my`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
-      setOrders(response.data);
-      console.log(`✅ Loaded ${response.data.length} orders`);
+      setOrders(response.data.data || response.data);
+      console.log(`✅ Loaded ${response.data.length || 0} orders`);
     } catch (err: any) {
       console.error('❌ Error fetching orders:', err);
       setError(err.response?.data?.message || 'Failed to load orders');
@@ -93,7 +96,6 @@ export default function OrdersPage() {
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {isFarmer ? 'Orders Received' : 'My Orders'}
@@ -103,7 +105,6 @@ export default function OrdersPage() {
           </p>
         </div>
 
-        {/* Error message */}
         {error && (
           <div className="mb-6 flex items-center gap-3 rounded-lg bg-red-50 border border-red-200 p-4 text-red-800">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
@@ -120,7 +121,6 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {/* Status filter tabs */}
         <div className="mb-6 overflow-x-auto">
           <div className="flex gap-2 pb-2">
             {statusFilters.map(status => (
@@ -142,7 +142,6 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        {/* Loading state */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader className="h-8 w-8 animate-spin text-blue-600 mb-4" />
@@ -150,7 +149,6 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {/* Empty state */}
         {!loading && filteredOrders.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
             <Package className="h-12 w-12 text-gray-400 mb-4" />
@@ -165,7 +163,6 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {/* Orders list */}
         {!loading && filteredOrders.length > 0 && (
           <div className="space-y-4">
             {filteredOrders.map(order => (
@@ -180,7 +177,6 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {/* Summary stats */}
         {!loading && orders.length > 0 && (
           <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg p-4 border border-gray-200">

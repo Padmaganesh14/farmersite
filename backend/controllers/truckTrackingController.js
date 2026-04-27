@@ -8,6 +8,10 @@ const asyncHandler = require('express-async-handler');
  * @access  Private (Farmer only)
  */
 const startDeliveryTracking = asyncHandler(async (req, res) => {
+  if (!req.params.orderId || req.params.orderId === 'undefined') {
+    res.status(400);
+    throw new Error('Order ID is required');
+  }
   try {
     console.log('=== START DELIVERY TRACKING ===');
     console.log('Order ID:', req.params.orderId);
@@ -194,6 +198,10 @@ const updateTruckLocation = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const getLiveTracking = asyncHandler(async (req, res) => {
+  if (!req.params.orderId || req.params.orderId === 'undefined' || req.params.orderId === 'null') {
+    res.status(400);
+    throw new Error('Order ID is required');
+  }
   try {
     console.log('=== GET LIVE TRACKING ===');
     console.log('Order ID:', req.params.orderId);

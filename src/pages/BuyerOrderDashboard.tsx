@@ -2,15 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
-  Clock,
-  CheckCircle2,
-  TrendingUp,
   MapPin,
-  Package,
   Loader,
   AlertCircle,
   Eye,
-  X,
 } from 'lucide-react';
 import axios from 'axios';
 import Navbar from '@/components/Navbar';
@@ -18,6 +13,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import LiveTrackerMap from '@/components/LiveTrackerMap';
+import { API_URL } from '@/config';
 
 interface Order {
   _id: string;
@@ -54,7 +50,7 @@ export default function BuyerOrderDashboard() {
     if (!token) return;
 
     try {
-      const res = await axios.get('http://localhost:5000/api/orders/my', {
+      const res = await axios.get(`${API_URL}/api/orders/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrders(res.data.data || res.data);
@@ -76,7 +72,7 @@ export default function BuyerOrderDashboard() {
   useEffect(() => {
     setFilteredOrders(
       orders.filter((o) =>
-        o.product.cropName.toLowerCase().includes(searchTerm.toLowerCase())
+        o.product?.cropName?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
   }, [orders, searchTerm]);
@@ -146,11 +142,11 @@ export default function BuyerOrderDashboard() {
             {filteredOrders.map((order) => (
               <div key={order._id} className="border rounded-lg p-4">
                 <h3 className="font-bold">
-                  {order.product.cropName}
+                  {order.product?.cropName}
                 </h3>
 
                 <p className="text-sm text-muted-foreground">
-                  Farmer: {order.product.farmer.name}
+                  Farmer: {order.product?.farmer?.name || 'Local Farmer'}
                 </p>
 
                 <p className="font-semibold mt-2">

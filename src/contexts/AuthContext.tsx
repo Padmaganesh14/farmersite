@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { API_URL } from '@/config';
 
 export type UserRole = 'farmer' | 'buyer' | 'admin';
 
@@ -13,33 +14,13 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => void;
-  signup: (name: string, email: string, password: string, phone: string, role: UserRole) => void;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, phone: string, role: UserRole) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Demo users for hackathon
-const demoUsers: Record<string, User & { password: string }> = {
-  'farmer@demo.com': {
-    id: '1',
-    name: 'Rajan Kumar',
-    email: 'farmer@demo.com',
-    phone: '+919876543210',
-    role: 'farmer',
-    password: 'demo123',
-  },
-  'buyer@demo.com': {
-    id: '2',
-    name: 'Priya Singh',
-    email: 'buyer@demo.com',
-    phone: '+919876543211',
-    role: 'buyer',
-    password: 'demo123',
-  },
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
@@ -49,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -74,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (name: string, email: string, password: string, phone: string, role: UserRole) => {
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, role })

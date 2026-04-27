@@ -2,6 +2,7 @@ import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import { useEffect, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { API_URL } from '@/config';
 
 // 🚚 Truck icon
 const truckIcon = new L.Icon({
@@ -39,8 +40,13 @@ export default function LiveTrackerMap({ orderId }: LiveTrackerMapProps) {
           console.warn("⏳ No token found, skipping tracking fetch");
           return;
         }
+
+        if (!orderId || orderId === 'undefined' || orderId === 'null') {
+          console.warn("⏳ Invalid Order ID, skipping tracking fetch");
+          return;
+        }
         
-        const res = await fetch(`http://localhost:5000/api/tracking/${orderId}/live`, {
+        const res = await fetch(`${API_URL}/api/tracking/${orderId}/live`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();

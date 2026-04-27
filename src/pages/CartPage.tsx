@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import { ShoppingCart, CheckCircle2, Trash2, ArrowRight, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { API_URL } from '@/config';
 
 const CartPage = () => {
   const { user } = useAuth();
@@ -26,10 +27,8 @@ const CartPage = () => {
     setIsCheckingOut(true);
     
     try {
-      // For a real cart, we'd loop through items and create individual orders
-      // Based on our simpler backend route, you create an order for each product.
       const orderPromises = cart.map((item) => 
-        fetch('http://localhost:5000/api/orders/create', {
+        fetch(`${API_URL}/api/orders/create`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -101,7 +100,7 @@ const CartPage = () => {
               {cart.map((item) => (
                 <div key={item.product._id} className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-card border border-border rounded-xl">
                   <img 
-                    src={item.product.image?.startsWith('/uploads') ? `http://localhost:5000${item.product.image}` : item.product.image || 'https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=400&h=300&fit=crop'} 
+                    src={item.product.image?.startsWith('/uploads') ? `${API_URL}${item.product.image}` : item.product.image || 'https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=400&h=300&fit=crop'} 
                     alt={item.product.cropName}
                     className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
                   />

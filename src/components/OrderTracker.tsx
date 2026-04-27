@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Truck, MapPin, CheckCircle2, ExternalLink, Navigation, AlertCircle, Loader } from 'lucide-react';
+import { Package, Truck, MapPin, CheckCircle2, Navigation, AlertCircle, Loader } from 'lucide-react';
 import axios from 'axios';
+import { API_URL } from '@/config';
 
 interface Order {
   _id: string;
@@ -94,7 +95,7 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
       const token = savedUser ? JSON.parse(savedUser).token : null;
       
       await axios.put(
-        `http://localhost:5000/api/orders/${order._id}`,
+        `${API_URL}/api/orders/${order._id}`,
         { status: nextStatus },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -111,7 +112,6 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
 
   return (
     <div className={`rounded-lg border border-gray-200 p-6 shadow-sm ${STATUS_BG[order.status]}`}>
-      {/* Error message */}
       {error && (
         <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-100 p-3 text-red-800">
           <AlertCircle className="h-4 w-4" />
@@ -119,23 +119,22 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
         </div>
       )}
 
-      {/* Header: Product info + Status badge */}
       <div className="mb-4 flex items-start justify-between">
         <div className="flex gap-3">
-          {order.product.image && (
+          {order.product?.image && (
             <img
-              src={order.product.image}
+              src={order.product.image.startsWith('/uploads') ? `${API_URL}${order.product.image}` : order.product.image}
               alt={order.product.cropName}
               className="h-16 w-16 rounded-lg object-cover"
             />
           )}
           <div>
-            <h3 className="font-semibold text-gray-900">{order.product.cropName}</h3>
+            <h3 className="font-semibold text-gray-900">{order.product?.cropName}</h3>
             <p className="text-sm text-gray-600">
               Quantity: <span className="font-medium">{order.quantity}</span>
             </p>
             <p className="text-sm text-gray-600">
-              Farmer: <span className="font-medium">{order.buyer.name}</span>
+              Buyer: <span className="font-medium">{order.buyer?.name}</span>
             </p>
           </div>
         </div>
@@ -148,7 +147,6 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
         </div>
       </div>
 
-      {/* Status progress indicator */}
       <div className="mb-4">
         <div className="flex gap-2">
           {STEPS.slice(0, 5).map((step, i) => {
@@ -172,7 +170,6 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
           })}
         </div>
 
-        {/* Progress bar */}
         <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
@@ -181,7 +178,6 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
         </div>
       </div>
 
-      {/* Dates */}
       <div className="mb-4 grid grid-cols-2 gap-4 rounded-lg bg-white p-3">
         <div>
           <p className="text-xs font-semibold text-gray-600">ORDERED</p>
@@ -199,7 +195,6 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
         )}
       </div>
 
-      {/* Action buttons */}
       <div className="flex gap-3">
         {isFarmer && showUpdateButton && nextStatus && (
           <button
@@ -234,5 +229,3 @@ const OrderTracker = ({ order, onUpdateStatus, showUpdateButton, isFarmer }: Ord
 };
 
 export default OrderTracker;
-
-

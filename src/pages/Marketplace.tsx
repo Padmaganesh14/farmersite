@@ -7,6 +7,7 @@ import { ShoppingBag, Search, MapPin, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { API_URL } from '@/config';
 
 const Marketplace = () => {
   const { user } = useAuth();
@@ -20,7 +21,7 @@ const Marketplace = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/products');
+        const res = await fetch(`${API_URL}/api/products`);
         if (res.ok) {
           const data = await res.json();
           setProducts(data);
@@ -94,7 +95,7 @@ const Marketplace = () => {
               <div key={product._id} className="card-shadow-hover rounded-xl border border-border bg-card overflow-hidden flex flex-col animate-fade-in group transition-all">
                 <div className="relative h-48 overflow-hidden bg-muted">
                   <img 
-                    src={product.image?.startsWith('/uploads') ? `http://localhost:5000${product.image}` : product.image || 'https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=400&h=300&fit=crop'} 
+                    src={product.image?.startsWith('/uploads') ? `${API_URL}${product.image}` : product.image || 'https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=400&h=300&fit=crop'} 
                     alt={product.cropName}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -133,7 +134,6 @@ const Marketplace = () => {
   );
 };
 
-// Simple stub for missing icon
 const Package = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>

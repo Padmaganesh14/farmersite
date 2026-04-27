@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
+import { API_URL } from '@/config';
 
 // ✅ ONLY ADD THIS LINE
 const API_URL = import.meta.env.VITE_API_URL;
@@ -42,18 +43,26 @@ const Dashboard = () => {
     if (!user?.token) return;
 
     try {
+<<<<<<< HEAD
       // ✅ CHANGED
+=======
+      // ORDERS
+>>>>>>> e73f4f2 (fixed API URL env + syntax errors)
       const orderRes = await fetch(`${API_URL}/api/orders/my`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
       if (orderRes.ok) {
         const data = await orderRes.json();
-        setOrders(data.data || data.orders || (Array.isArray(data) ? data : []));
+        const ordersArray = data.data || data.orders || (Array.isArray(data) ? data : []);
+        setOrders(ordersArray);
       }
 
       if (isFarmer) {
+<<<<<<< HEAD
         // ✅ CHANGED
+=======
+>>>>>>> e73f4f2 (fixed API URL env + syntax errors)
         const prodRes = await fetch(`${API_URL}/api/products`);
         if (prodRes.ok) {
           const data = await prodRes.json();
@@ -101,8 +110,15 @@ const Dashboard = () => {
   };
 
   const handleStartDelivery = async (orderId: string) => {
+    if (!orderId || orderId === 'undefined') {
+      toast({ title: 'Order ID is missing. Please refresh and try again.', variant: 'destructive' });
+      return;
+    }
     try {
+<<<<<<< HEAD
       // ✅ CHANGED
+=======
+>>>>>>> e73f4f2 (fixed API URL env + syntax errors)
       const res = await fetch(`${API_URL}/api/tracking/start/${orderId}`, {
         method: 'POST',
         headers: {
@@ -142,7 +158,10 @@ const Dashboard = () => {
         formData.append('image', imageFile);
       }
 
+<<<<<<< HEAD
       // ✅ CHANGED
+=======
+>>>>>>> e73f4f2 (fixed API URL env + syntax errors)
       const res = await fetch(`${API_URL}/api/products/add`, {
         method: 'POST',
         headers: {
@@ -172,7 +191,10 @@ const Dashboard = () => {
   };
 
   const handleDeleteProduct = async (id: string) => {
+<<<<<<< HEAD
     // ✅ CHANGED
+=======
+>>>>>>> e73f4f2 (fixed API URL env + syntax errors)
     const res = await fetch(`${API_URL}/api/products/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${user.token}` },
@@ -267,7 +289,13 @@ const Dashboard = () => {
                   )}
 
                   {(o.status === 'shipped' || o.status === 'out_for_delivery') && (
-                    <Button onClick={() => navigate(`/live-tracker/${o._id}`)}>
+                    <Button onClick={() => {
+                      if (o._id && o._id !== 'undefined') {
+                        navigate(`/live-tracker/${o._id}`);
+                      } else {
+                        toast({ title: 'Order ID is missing. Please refresh.', variant: 'destructive' });
+                      }
+                    }}>
                       Track
                     </Button>
                   )}

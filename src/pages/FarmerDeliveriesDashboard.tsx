@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { API_URL } from '@/config';
 
 interface Delivery {
   orderId: string;
@@ -54,13 +55,13 @@ export default function FarmerDeliveriesDashboard() {
     try {
       setError(null);
       const response = await axios.get(
-        'http://localhost:5000/api/tracking/farmer/active',
+        `${API_URL}/api/tracking/farmer/active`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setDeliveries(response.data.orders);
-      console.log(`✅ Loaded ${response.data.count} active deliveries`);
+      setDeliveries(response.data.orders || []);
+      console.log(`✅ Loaded ${response.data.count || 0} active deliveries`);
     } catch (err: any) {
       console.error('❌ Error fetching deliveries:', err);
       const errorMsg = err.response?.data?.message || 'Failed to load deliveries';

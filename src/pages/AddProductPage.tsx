@@ -1,15 +1,12 @@
-// src/pages/AddProductPage.tsx
-// Complete working example - Copy and use!
-
-import { useState } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { API_URL } from '@/config';
 
 export default function AddProductPage() {
   const { user } = useAuth();
-  const token = user?.token;  // ✅ Get token from user object
+  const token = user?.token;
   
-  // Form state
   const [formData, setFormData] = useState({
     cropName: '',
     quantity: '',
@@ -17,13 +14,12 @@ export default function AddProductPage() {
     location: '',
   });
   
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  // Handle text input changes
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -31,18 +27,15 @@ export default function AddProductPage() {
     }));
   };
 
-  // Handle file selection
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         setError('Invalid file type. Only JPEG, PNG, and WEBP allowed.');
         return;
       }
       
-      // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         setError('File too large. Maximum 5MB allowed.');
         return;
@@ -53,77 +46,47 @@ export default function AddProductPage() {
     }
   };
 
-  // Submit form
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      // 1. Validate all required fields
-      if (!formData.cropName.trim()) {
-        throw new Error('Crop name is required');
-      }
-      if (!formData.quantity.trim()) {
-        throw new Error('Quantity is required');
-      }
-      if (!formData.price.trim()) {
-        throw new Error('Price is required');
-      }
-      if (!formData.location.trim()) {
-        throw new Error('Location is required');
-      }
+      if (!formData.cropName.trim()) throw new Error('Crop name is required');
+      if (!formData.quantity.trim()) throw new Error('Quantity is required');
+      if (!formData.price.trim()) throw new Error('Price is required');
+      if (!formData.location.trim()) throw new Error('Location is required');
 
-      // 2. Validate numbers
       const quantity = parseFloat(formData.quantity);
       const price = parseFloat(formData.price);
 
-      if (isNaN(quantity) || quantity <= 0) {
-        throw new Error('Quantity must be a positive number');
-      }
-      if (isNaN(price) || price <= 0) {
-        throw new Error('Price must be a positive number');
-      }
+      if (isNaN(quantity) || quantity <= 0) throw new Error('Quantity must be a positive number');
+      if (isNaN(price) || price <= 0) throw new Error('Price must be a positive number');
 
-      // 3. Check authentication
-      if (!token) {
-        throw new Error('You are not logged in. Please login first.');
-      }
+      if (!token) throw new Error('You are not logged in. Please login first.');
 
-      // 4. Create FormData
       const data = new FormData();
       data.append('cropName', formData.cropName.trim());
       data.append('quantity', quantity.toString());
       data.append('price', price.toString());
       data.append('location', formData.location.trim());
 
-      // 5. Add image if selected
       if (imageFile) {
         data.append('image', imageFile);
-        console.log('📁 Image added:', imageFile.name);
-      } else {
-        console.log('📁 No image selected (optional)');
       }
 
-      // 6. Make API request
-      console.log('📤 Sending request to /api/products/add');
       const response = await axios.post(
-        'http://localhost:5000/api/products/add',
+        `${API_URL}/api/products/add`,
         data,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
-            // Don't set Content-Type - let axios handle it with FormData
           },
         }
       );
 
-      // 7. Success!
-      console.log('✅ Product added successfully:', response.data);
       setSuccess('Product added successfully!');
-
-      // Reset form
       setFormData({
         cropName: '',
         quantity: '',
@@ -132,29 +95,23 @@ export default function AddProductPage() {
       });
       setImageFile(null);
       
-      // Reset file input
       const fileInput = document.getElementById('imageInput') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('❌ Error:', err);
-      
-      // Get error message
       let errorMessage = 'Failed to add product';
-      
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // Check if user is logged in
   if (!user) {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -164,7 +121,6 @@ export default function AddProductPage() {
     );
   }
 
-  // Check if user is farmer
   if (user.role !== 'farmer') {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -178,7 +134,6 @@ export default function AddProductPage() {
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
       <h1>Add New Product</h1>
       
-      {/* Error Message */}
       {error && (
         <div style={{
           padding: '10px',
@@ -192,7 +147,6 @@ export default function AddProductPage() {
         </div>
       )}
 
-      {/* Success Message */}
       {success && (
         <div style={{
           padding: '10px',
@@ -206,9 +160,7 @@ export default function AddProductPage() {
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleSubmit}>
-        {/* Crop Name */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="cropName" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Crop Name *
@@ -232,7 +184,6 @@ export default function AddProductPage() {
           />
         </div>
 
-        {/* Quantity */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="quantity" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Quantity * (in kg/units)
@@ -258,7 +209,6 @@ export default function AddProductPage() {
           />
         </div>
 
-        {/* Price */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="price" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Price per Unit * (₹)
@@ -284,7 +234,6 @@ export default function AddProductPage() {
           />
         </div>
 
-        {/* Location */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="location" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Location *
@@ -308,7 +257,6 @@ export default function AddProductPage() {
           />
         </div>
 
-        {/* Image Upload */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="imageInput" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Product Image (Optional)
@@ -335,7 +283,6 @@ export default function AddProductPage() {
           )}
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
@@ -355,7 +302,6 @@ export default function AddProductPage() {
         </button>
       </form>
 
-      {/* Debug Info */}
       <div style={{
         marginTop: '30px',
         padding: '15px',
