@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom'; // ✅ FIXED
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Trash2 } from 'lucide-react';
@@ -9,9 +9,12 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 
+// ✅ ONLY ADD THIS LINE
+const API_URL = import.meta.env.VITE_API_URL;
+
 const Dashboard = () => {
   const { t } = useLanguage();
-  const navigate = useNavigate(); // ✅ now works
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -29,20 +32,18 @@ const Dashboard = () => {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // ✅ safer redirect
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
   const isFarmer = user.role === 'farmer';
 
-  // ✅ FETCH DATA
   const fetchData = async () => {
     if (!user?.token) return;
 
     try {
-      // ORDERS
-      const orderRes = await fetch('http://localhost:5000/api/orders/my', {
+      // ✅ CHANGED
+      const orderRes = await fetch(`${API_URL}/api/orders/my`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -51,9 +52,9 @@ const Dashboard = () => {
         setOrders(data.data || data.orders || (Array.isArray(data) ? data : []));
       }
 
-      // PRODUCTS
       if (isFarmer) {
-        const prodRes = await fetch('http://localhost:5000/api/products');
+        // ✅ CHANGED
+        const prodRes = await fetch(`${API_URL}/api/products`);
         if (prodRes.ok) {
           const data = await prodRes.json();
           setProducts(data.products || (Array.isArray(data) ? data : []));
@@ -70,13 +71,13 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, [user]);
 
-  // ✅ UPDATE ORDER
   const handleUpdateStatus = async (orderId: string, status: string) => {
     try {
+      // ✅ CHANGED
       const endpoint =
         status === 'accepted'
-          ? `http://localhost:5000/api/orders/${orderId}/accept`
-          : `http://localhost:5000/api/orders/${orderId}/status`;
+          ? `${API_URL}/api/orders/${orderId}/accept`
+          : `${API_URL}/api/orders/${orderId}/status`;
 
       const method = status === 'accepted' ? 'POST' : 'PUT';
 
@@ -99,10 +100,10 @@ const Dashboard = () => {
     }
   };
 
-  // ✅ START DELIVERY
   const handleStartDelivery = async (orderId: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/tracking/start/${orderId}`, {
+      // ✅ CHANGED
+      const res = await fetch(`${API_URL}/api/tracking/start/${orderId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ const Dashboard = () => {
       if (res.ok) {
         toast({ title: 'Delivery started and tracking is live!' });
         fetchData();
-        navigate(`/live-tracker/${orderId}`); // ✅ now works
+        navigate(`/live-tracker/${orderId}`);
       }
     } catch (err) {
       console.error(err);
@@ -126,7 +127,6 @@ const Dashboard = () => {
     }
   };
 
-  // ✅ ADD PRODUCT
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -142,7 +142,8 @@ const Dashboard = () => {
         formData.append('image', imageFile);
       }
 
-      const res = await fetch('http://localhost:5000/api/products/add', {
+      // ✅ CHANGED
+      const res = await fetch(`${API_URL}/api/products/add`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -170,9 +171,9 @@ const Dashboard = () => {
     }
   };
 
-  // ✅ DELETE PRODUCT
   const handleDeleteProduct = async (id: string) => {
-    const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+    // ✅ CHANGED
+    const res = await fetch(`${API_URL}/api/products/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${user.token}` },
     });
@@ -192,7 +193,6 @@ const Dashboard = () => {
           {isFarmer ? 'Farmer Dashboard' : 'Buyer Dashboard'}
         </h1>
 
-        {/* ADD PRODUCT */}
         {isFarmer && (
           <>
             <Button onClick={() => setShowAddForm(!showAddForm)} className="mt-4">
@@ -222,7 +222,6 @@ const Dashboard = () => {
           </>
         )}
 
-        {/* PRODUCTS */}
         <div className="mt-6">
           {products.length === 0 ? (
             <p>No products</p>
@@ -241,7 +240,6 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* ORDERS */}
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-4">Orders Received</h2>
 
